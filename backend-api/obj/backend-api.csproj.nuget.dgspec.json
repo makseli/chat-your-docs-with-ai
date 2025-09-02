@@ -1,0 +1,74 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/makseli/work/dEV/chat-your-docs-with-ai/backend-api/backend-api.csproj": {}
+  },
+  "projects": {
+    "/home/makseli/work/dEV/chat-your-docs-with-ai/backend-api/backend-api.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/makseli/work/dEV/chat-your-docs-with-ai/backend-api/backend-api.csproj",
+        "projectName": "backend-api",
+        "projectPath": "/home/makseli/work/dEV/chat-your-docs-with-ai/backend-api/backend-api.csproj",
+        "packagesPath": "/home/makseli/.nuget/packages/",
+        "outputPath": "/home/makseli/work/dEV/chat-your-docs-with-ai/backend-api/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/makseli/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.OpenApi": {
+              "target": "Package",
+              "version": "[8.0.18, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.6.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.118/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
