@@ -1,1 +1,777 @@
-veerryy soon :)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Your Docs with AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+        .header-buttons {
+            position: absolute;
+            top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .header-buttons.left { left: 20px; }
+        .header-buttons.right { right: 20px; }
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        .chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        .message { margin-bottom: 15px; display: flex; align-items: flex-start; }
+        .message.user { justify-content: flex-end; }
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        .message.user .message-content {
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #fd7e14 100%);
+            color: white;
+        }
+        .message.ai .message-content {
+            background: white;
+            border: 1px solid #e9ecef;
+            color: #333;
+        }
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+        .input-group { display: flex; gap: 10px; }
+        .input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        .input-group input:focus { border-color: #ff8c00; }
+        .input-group button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #fd7e14 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .input-group button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .loading { display: flex; align-items: center; gap: 10px; color: #666; }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e9ecef;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close:hover { opacity: 0.7; }
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-label { font-weight: 600; color: #333; }
+        .status-value {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-healthy { background: #d4edda; color: #155724; }
+        .status-degraded { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-connected { background: #fff3cd; color: #856404; }
+        .status-disconnected { background: #f8d7da; color: #721c24; }
+        .status-backend-connected { background: #e9ecef; color: #495057; }
+        .status-backend-disconnected { background: #f8d7da; color: #721c24; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-running { background: #d4edda; color: #155724; }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #333; }
+        .file-size { font-size: 12px; color: #666; }
+        .file-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-processed { background: #d4edda; color: #155724; }
+        .status-queued { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .upload-area {
+            border: 2px dashed #6c757d;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #6c757d;
+            background: #e9ecef;
+        }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .upload-input {
+            display: none;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .upload-btn:hover {
+            transform: translateY(-1px);
+        }
+        .log-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-timestamp { color: #666; font-weight: bold; }
+        .log-level { padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .log-level-INFO { background: #d1ecf1; color: #0c5460; }
+        .log-level-WARNING { background: #fff3cd; color: #856404; }
+        .log-level-ERROR { background: #f8d7da; color: #721c24; }
+        .log-event { color: #667eea; font-weight: bold; }
+        .log-message { color: #333; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-buttons left">
+                <button class="header-btn" onclick="showFilesModal()">📁 Files</button>
+            </div>
+            <div class="header-buttons right">
+                <button class="header-btn" onclick="showSystemStatusModal()">⚙️ System Status</button>
+            </div>
+            <h1>🤖 Chat Your Docs with AI</h1>
+            <p>Chat with your documents, let AI help you</p>
+        </div>
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="message ai">
+                    <div class="message-content">
+                        Hello! I'm your AI assistant. You can ask questions about your uploaded documents.
+                    </div>
+                </div>
+            </div>
+            <div class="input-container">
+                <div class="input-group">
+                    <input type="text" id="questionInput" placeholder="Ask a question about your documents...">
+                    <button id="sendButton" onclick="sendQuestion()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Modal -->
+    <div id="systemStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ System Status</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="header-btn" onclick="showLogsModal()" style="font-size: 11px; padding: 4px 8px;">📋 View Logs</button>
+                    <span class="close" onclick="closeModal('systemStatusModal')">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body" id="systemStatusContent">
+                <div class="loading">
+                    <div class="spinner"></div> Loading system status...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Files Modal -->
+    <div id="filesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📁 Files</h2>
+                <span class="close" onclick="closeModal('filesModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="filesContent">
+                <div class="loading">
+                    <div class="spinner"></div> Loading files...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div id="logsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 System Logs</h2>
+                <span class="close" onclick="closeModal('logsModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="logsContent">
+                <div class="loading">
+                    <div class="spinner"></div> Loading logs...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let isLoading = false;
+
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isLoading) sendQuestion();
+        });
+
+        async function sendQuestion() {
+            const input = document.getElementById('questionInput');
+            const button = document.getElementById('sendButton');
+            const question = input.value.trim();
+
+            if (!question || isLoading) return;
+
+            isLoading = true;
+            input.value = '';
+            button.disabled = true;
+            button.textContent = 'Sending...';
+
+            addMessage(question, 'user');
+            const loadingId = addLoadingMessage();
+
+            try {
+                const response = await fetch(`${API_BASE}/question/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question, maxResults: 5 })
+                });
+
+                const data = await response.json();
+                removeMessage(loadingId);
+
+                if (data.success) {
+                    addMessage(data.answer, 'ai');
+                } else {
+                    addMessage(data.answer || 'Sorry, an error occurred.', 'ai');
+                }
+            } catch (error) {
+                removeMessage(loadingId);
+                addMessage('Connection error. Please try again.', 'ai');
+            } finally {
+                isLoading = false;
+                button.disabled = false;
+                button.textContent = 'Send';
+                input.focus();
+            }
+        }
+
+        function addMessage(content, type) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            return messageDiv;
+        }
+
+        function addLoadingMessage() {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            messageDiv.id = 'loading-message';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.innerHTML = '<div class="spinner"></div> Working...';
+
+            messageContent.appendChild(loading);
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+
+            return 'loading-message';
+        }
+
+        function removeMessage(messageId) {
+            const message = document.getElementById(messageId);
+            if (message) message.remove();
+        }
+
+        // Modal Functions
+        function showSystemStatusModal() {
+            const modal = document.getElementById('systemStatusModal');
+            modal.style.display = 'block';
+            loadSystemStatus();
+        }
+
+        function showFilesModal() {
+            const modal = document.getElementById('filesModal');
+            modal.style.display = 'block';
+            loadFiles();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const systemModal = document.getElementById('systemStatusModal');
+            const filesModal = document.getElementById('filesModal');
+            const logsModal = document.getElementById('logsModal');
+            if (event.target === systemModal) {
+                systemModal.style.display = 'none';
+            }
+            if (event.target === filesModal) {
+                filesModal.style.display = 'none';
+            }
+            if (event.target === logsModal) {
+                logsModal.style.display = 'none';
+            }
+        }
+
+        async function loadSystemStatus() {
+            const content = document.getElementById('systemStatusContent');
+            
+            try {
+                const response = await fetch('http://localhost:8080/');
+                const data = await response.json();
+                
+                content.innerHTML = `
+                    <div class="status-item">
+                        <span class="status-label">Overall Status</span>
+                        <span class="status-value status-${data.status}">${data.status.toUpperCase()}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Uptime</span>
+                        <span class="status-value">${data.uptime}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Last Update</span>
+                        <span class="status-value">${new Date(data.timestamp).toLocaleString('en-US')}</span>
+                    </div>
+                    <hr style="margin: 20px 0;">
+                    <h3 style="margin-bottom: 15px; color: #333;">Service Status</h3>
+                    <div class="status-item">
+                        <span class="status-label">Redis</span>
+                        <span class="status-value status-${data.services.redis.isConnected ? 'backend-connected' : 'backend-disconnected'}">${data.services.redis.status}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Ollama</span>
+                        <span class="status-value status-${data.services.ollama.isConnected ? 'connected' : 'disconnected'}">${data.services.ollama.status} [${data.services.ollama.chatModel || 'unknown'}]</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Python Worker</span>
+                        <span class="status-value status-${data.services.pythonWorker.isActive ? 'active' : 'inactive'}">${data.services.pythonWorker.status}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Frontend</span>
+                        <span class="status-value status-${data.services.frontend.isRunning ? 'running' : 'error'}">${data.services.frontend.status}</span>
+                    </div>
+                    ${data.services.ollama.message ? `<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 14px;">⚠️ ${data.services.ollama.message}</div>` : ''}
+                `;
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; color: #721c24; padding: 20px;">
+                        ❌ System status could not be loaded: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function loadFiles() {
+            const content = document.getElementById('filesContent');
+            
+            // Add upload area
+            content.innerHTML = `
+                <div class="upload-area" id="uploadArea">
+                    <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
+                    <div style="font-weight: 600; margin-bottom: 5px;">Upload Documents</div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 15px;">Drag & drop files here or click to browse</div>
+                    <input type="file" id="fileInput" class="upload-input" accept=".pdf,.md" multiple>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose Files</button>
+                    <div style="font-size: 11px; color: #666; margin-top: 10px;">Supported formats: PDF, Markdown</div>
+                </div>
+                <div id="fileListContent">
+                    <div class="loading">
+                        <div class="spinner"></div> Loading files...
+                    </div>
+                </div>
+            `;
+            
+            // Setup file upload
+            setupFileUpload();
+            
+            try {
+                const response = await fetch(`${API_BASE}/files`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.errorMessage || 'Files could not be loaded');
+                }
+                
+                const fileListContent = document.getElementById('fileListContent');
+                
+                if (data.files.length === 0) {
+                    fileListContent.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            📁 No files uploaded yet
+                        </div>
+                    `;
+                    return;
+                }
+                
+                fileListContent.innerHTML = `
+                    <div style="margin-bottom: 15px; color: #333;">
+                        <strong>Total Files:</strong> ${data.totalCount}
+                    </div>
+                    <div class="file-list">
+                        ${data.files.map(file => {
+                            const status = file.status === 'Error' ? 'Error' : 
+                                         file.status === 'Processed' ? 'Processed' : 'Queued';
+                            const statusClass = file.status === 'Error' ? 'error' : 
+                                              file.status === 'Processed' ? 'processed' : 'queued';
+                            const chunks = file.chunkCount > 0 ? ` • ${file.chunkCount} chunks` : '';
+                            
+                            return `
+                                <div class="file-item">
+                                    <div class="file-info">
+                                        <div class="file-name">${file.fileName}</div>
+                                        <div class="file-size">${formatFileSize(file.fileSize)}${chunks} • ${new Date(file.processedAt).toLocaleString('en-US')}</div>
+                                    </div>
+                                    <div class="file-status status-${statusClass}">
+                                        ${status}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                const fileListContent = document.getElementById('fileListContent');
+                fileListContent.innerHTML = `
+                    <div style="text-align: center; color: #721c24; padding: 20px;">
+                        ❌ Files could not be loaded: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function showLogsModal() {
+            const modal = document.getElementById('logsModal');
+            modal.style.display = 'block';
+            loadLogs();
+        }
+
+        async function loadLogs() {
+            const content = document.getElementById('logsContent');
+            
+            try {
+                const response = await fetch(`${API_BASE}/logs?count=50`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error('Logs could not be loaded');
+                }
+                
+                if (data.logs.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            📋 No logs available
+                        </div>
+                    `;
+                    return;
+                }
+                
+                content.innerHTML = `
+                    <div style="margin-bottom: 15px; color: #333;">
+                        <strong>Total Logs:</strong> ${data.totalCount || 0} | 
+                        <strong>Retrieved:</strong> ${data.logs.length} | 
+                        <strong>Last Update:</strong> ${data.retrievedAt ? new Date(data.retrievedAt).toLocaleString('en-US') : 'N/A'}
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                        ${data.logs.map(log => {
+                            const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString('en-US') : 'N/A';
+                            const level = log.level || 'UNKNOWN';
+                            const event = log.event || 'UNKNOWN';
+                            const message = log.message || 'No message';
+                            const details = log.details || '';
+                            const fileName = log.fileName || '';
+                            
+                            return `
+                                <div class="log-item">
+                                    <div>
+                                        <span class="log-timestamp">${timestamp}</span>
+                                        <span class="log-level log-level-${level}">${level}</span>
+                                        <span class="log-event">${event}</span>
+                                    </div>
+                                    <div class="log-message">${message}</div>
+                                    ${details ? `<div style="color: #666; font-size: 11px; margin-top: 2px;">${details}</div>` : ''}
+                                    ${fileName ? `<div style="color: #667eea; font-size: 11px; margin-top: 2px;">📁 ${fileName}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; color: #721c24; padding: 20px;">
+                        ❌ Logs could not be loaded: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                handleFileUpload(files);
+            });
+            
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                handleFileUpload(e.target.files);
+            });
+        }
+
+        async function handleFileUpload(files) {
+            if (!files || files.length === 0) return;
+            
+            const uploadArea = document.getElementById('uploadArea');
+            const originalContent = uploadArea.innerHTML;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Validate file type
+                if (!file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.md')) {
+                    alert(`File ${file.name} is not supported. Please upload PDF or Markdown files.`);
+                    continue;
+                }
+                
+                // Show upload progress
+                uploadArea.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 10px;">📤</div>
+                    <div style="font-weight: 600; margin-bottom: 5px;">Uploading...</div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
+                    <div class="loading">
+                        <div class="spinner"></div> Uploading file...
+                    </div>
+                `;
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const response = await fetch(`${API_BASE}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        uploadArea.innerHTML = `
+                            <div style="font-size: 24px; margin-bottom: 10px;">✅</div>
+                            <div style="font-weight: 600; margin-bottom: 5px;">Upload Successful!</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
+                            <div style="font-size: 11px; color: #28a745;">File queued for processing</div>
+                        `;
+                        
+                        // Reload file list after a short delay
+                        setTimeout(() => {
+                            loadFiles();
+                        }, 2000);
+                    } else {
+                        throw new Error(result.message || 'Upload failed');
+                    }
+                } catch (error) {
+                    uploadArea.innerHTML = `
+                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">Upload Failed</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
+                        <div style="font-size: 11px; color: #dc3545;">${error.message}</div>
+                    `;
+                    
+                    // Restore original content after 3 seconds
+                    setTimeout(() => {
+                        uploadArea.innerHTML = originalContent;
+                        setupFileUpload();
+                    }, 3000);
+                }
+                
+                // Wait between uploads
+                if (i < files.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+        }
+
+        window.addEventListener('load', function() {
+            document.getElementById('questionInput').focus();
+        });
+    </script>
+</body>
+</html>

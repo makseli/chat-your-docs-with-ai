@@ -9,6 +9,17 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+// CORS konfigürasyonu
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Redis konfigürasyonu - Resilient connection service
 builder.Services.AddSingleton<IRedisService, RedisService>();
 
@@ -23,6 +34,24 @@ else
     builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 }
 
+// CORS konfigürasyonu
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// HTTP Clients
+builder.Services.AddHttpClient<IOllamaService, OllamaService>();
+
+// RAG Services
+builder.Services.AddScoped<IOllamaService, OllamaService>();
+builder.Services.AddScoped<IRagService, RagService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -33,6 +62,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// CORS middleware
+app.UseCors("AllowAll");
 
 app.MapControllers();
 

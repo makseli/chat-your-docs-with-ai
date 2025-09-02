@@ -85,12 +85,7 @@ namespace backend_api.Services
                     await file.CopyToAsync(stream);
                 }
 
-                // Hash'i dosya adına ekle (metadata olarak)
-                var hashFileName = $"{Path.GetFileNameWithoutExtension(safeFileName)}_{fileHash.Substring(0, 8)}{extension}";
-                var hashFilePath = Path.Combine(_uploadsPath, hashFileName);
-                
-                // Hash'li dosya adıyla kopya oluştur (opsiyonel)
-                File.Copy(filePath, hashFilePath, false);
+                // Hash bilgisini log'a kaydet (dosya kopyası oluşturma)
 
                 _logger.LogInformation("Dosya başarıyla yüklendi: {FileName}", safeFileName);
                 await _redisService.LogEventAsync("INFO", "FILE_UPLOADED", "Dosya başarıyla yüklendi", fileName: safeFileName, filePath: filePath, fileSize: file.Length);

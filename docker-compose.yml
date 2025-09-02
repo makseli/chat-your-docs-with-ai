@@ -23,28 +23,53 @@ services:
     environment:
       - STORAGE_TYPE=FileStorage
       - REDIS_CONNECTION_STRING=redis:6379
+      - OLLAMA_HOST=http://ollama:11434
+      - EMBEDDING_MODEL=snowflake-arctic-embed2
+      - CHAT_MODEL=llama3.1:8b
 
-#  worker:
-  #  build:
- #     context: ./python-worker
-#      dockerfile: Dockerfile
-#    container_name: rag_worker
-#    restart: always
-#    volumes:
-#      - ./data/vectors:/app/data/vectors
-#      - ./data/uploaded_files:/app/data/uploaded_files:ro
-#    depends_on:
-#      - redis
-#      - backend
-#    environment:
-#      - REDIS_CONNECTION_STRING=redis:6379
 
-#  frontend:
-#    build:
-#      context: ./frontend-ui
-#    container_name: rag_frontend
-#    restart: always
-#    ports:
-#      - "80:80"
-#    depends_on:
-#      - rag-backend-api
+  worker:
+    build:
+      context: ./python-worker
+      dockerfile: Dockerfile
+    container_name: rag_worker
+    restart: always
+    volumes:
+      - ./data/vectors:/app/data/vectors
+      - ./data/uploaded_files:/app/data/uploaded_files
+    depends_on:
+      - redis
+      - rag-backend-api
+      - ollama
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OLLAMA_HOST=http://ollama:11434
+      - EMBEDDING_MODEL=snowflake-arctic-embed2
+      - CHUNK_SIZE=1000
+      - CHUNK_OVERLAP=200
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_llm
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+
+  frontend:
+    build:
+      context: ./frontend-ui
+    container_name: rag_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - rag-backend-api
+
+volumes:
+  ollama_data:
