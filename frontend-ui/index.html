@@ -5,312 +5,805 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Your Docs with AI</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --bg-hover: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #666666;
+            --accent-primary: #10a37f;
+            --accent-secondary: #ff6b35;
+            --border-color: #404040;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --border-radius: 12px;
+            --transition: all 0.2s ease;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            background: var(--bg-primary);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .sidebar-actions {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .sidebar-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+        }
+
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chat-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .header-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Chat Messages */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 100%;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 800px;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: relative;
-        }
-        .header h1 { font-size: 24px; margin-bottom: 5px; }
-        .header p { opacity: 0.9; font-size: 14px; }
-        .header-buttons {
-            position: absolute;
-            top: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .header-buttons.left { left: 20px; }
-        .header-buttons.right { right: 20px; }
-        .header-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            flex-shrink: 0;
         }
-        .header-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+
+        .message.user .message-avatar {
+            background: var(--accent-primary);
+            color: white;
         }
-        .chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f8f9fa;
+
+        .message.assistant .message-avatar {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
-        .message { margin-bottom: 15px; display: flex; align-items: flex-start; }
-        .message.user { justify-content: flex-end; }
+
         .message-content {
             max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            font-size: 15px;
+            line-height: 1.6;
             word-wrap: break-word;
         }
+
         .message.user .message-content {
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #fd7e14 100%);
+            background: var(--accent-primary);
             color: white;
+            border-bottom-right-radius: 4px;
         }
-        .message.ai .message-content {
-            background: white;
-            border: 1px solid #e9ecef;
-            color: #333;
+
+        .message.assistant .message-content {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
         }
+
+        .message-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .message.assistant .message-time {
+            text-align: left;
+        }
+
+        /* Input Area */
         .input-container {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e9ecef;
+            padding: 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
         }
-        .input-group { display: flex; gap: 10px; }
+
+        .input-wrapper {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .input-group {
+            display: flex;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+        }
+
         .input-group input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
-            border-radius: 25px;
-            outline: none;
-            font-size: 14px;
-        }
-        .input-group input:focus { border-color: #ff8c00; }
-        .input-group button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #fd7e14 100%);
-            color: white;
+            background: transparent;
             border: none;
-            border-radius: 25px;
+            padding: 16px 20px;
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-group button {
+            background: var(--accent-primary);
+            border: none;
+            color: white;
+            padding: 12px 20px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .input-group button:disabled { opacity: 0.6; cursor: not-allowed; }
-        .loading { display: flex; align-items: center; gap: 10px; color: #666; }
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #e9ecef;
-            border-top: 2px solid #667eea;
+
+        .input-group button:hover:not(:disabled) {
+            background: #0d8a6b;
+        }
+
+        .input-group button:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 24px;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Modal Styles */
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+        }
+
+        .welcome-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 600px;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .feature-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s ease;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
         }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
         .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 0;
-            border-radius: 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
             width: 90%;
             max-width: 600px;
             max-height: 80vh;
             overflow: hidden;
-            animation: slideIn 0.3s ease;
+            box-shadow: var(--shadow);
         }
+
         .modal-header {
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
-            color: white;
-            padding: 20px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
-        .modal-header h2 {
-            margin: 0;
+
+        .modal-title {
             font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
         }
-        .close {
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
             cursor: pointer;
-            line-height: 1;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
         }
-        .close:hover { opacity: 0.7; }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
         .modal-body {
-            padding: 20px;
+            padding: 24px;
             max-height: 60vh;
             overflow-y: auto;
         }
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .status-item:last-child { border-bottom: none; }
-        .status-label { font-weight: 600; color: #333; }
-        .status-value {
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .status-healthy { background: #d4edda; color: #155724; }
-        .status-degraded { background: #fff3cd; color: #856404; }
-        .status-error { background: #f8d7da; color: #721c24; }
-        .status-connected { background: #fff3cd; color: #856404; }
-        .status-disconnected { background: #f8d7da; color: #721c24; }
-        .status-backend-connected { background: #e9ecef; color: #495057; }
-        .status-backend-disconnected { background: #f8d7da; color: #721c24; }
-        .status-active { background: #d4edda; color: #155724; }
-        .status-inactive { background: #f8d7da; color: #721c24; }
-        .status-running { background: #d4edda; color: #155724; }
-        .file-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-        }
-        .file-info { flex: 1; }
-        .file-name { font-weight: 600; color: #333; }
-        .file-size { font-size: 12px; color: #666; }
-        .file-status {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .status-processed { background: #d4edda; color: #155724; }
-        .status-queued { background: #fff3cd; color: #856404; }
-        .status-error { background: #f8d7da; color: #721c24; }
+
+        /* File Upload */
         .upload-area {
-            border: 2px dashed #6c757d;
-            border-radius: 10px;
-            padding: 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 40px 20px;
             text-align: center;
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            transition: all 0.3s ease;
+            margin-bottom: 24px;
+            background: var(--bg-tertiary);
+            transition: var(--transition);
+            cursor: pointer;
         }
-        .upload-area:hover {
-            border-color: #6c757d;
-            background: #e9ecef;
-        }
+
+        .upload-area:hover,
         .upload-area.dragover {
-            border-color: #28a745;
-            background: #d4edda;
+            border-color: var(--accent-primary);
+            background: rgba(16, 163, 127, 0.05);
         }
-        .upload-input {
-            display: none;
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
         }
+
+        .upload-text {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .upload-subtext {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
         .upload-btn {
-            background: linear-gradient(135deg, #6c757d 0%, #6c757d 70%, #28a745 80%);
-            color: white;
+            background: var(--accent-primary);
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            margin: 10px 0;
+            transition: var(--transition);
         }
+
         .upload-btn:hover {
-            transform: translateY(-1px);
+            background: #0d8a6b;
         }
-        .log-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            font-family: monospace;
+
+        .upload-input {
+            display: none;
+        }
+
+        /* File List */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
             font-size: 12px;
+            color: var(--text-secondary);
         }
-        .log-item:last-child { border-bottom: none; }
-        .log-timestamp { color: #666; font-weight: bold; }
-        .log-level { padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        .log-level-INFO { background: #d1ecf1; color: #0c5460; }
-        .log-level-WARNING { background: #fff3cd; color: #856404; }
-        .log-level-ERROR { background: #f8d7da; color: #721c24; }
-        .log-event { color: #667eea; font-weight: bold; }
-        .log-message { color: #333; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .file-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .file-status.processed {
+            background: rgba(16, 163, 127, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .file-status.queued {
+            background: rgba(255, 107, 53, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        .file-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* System Status */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .status-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .status-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .status-connected {
+            background: rgba(16, 163, 127, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .status-active {
+            background: rgba(16, 163, 127, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .status-inactive {
+            background: rgba(255, 107, 53, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        /* Logs */
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .log-level {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .log-level.info {
+            background: rgba(16, 163, 127, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .log-level.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .log-message {
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                z-index: 1001;
+                height: 100vh;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .welcome-features {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-buttons left">
-                <button class="header-btn" onclick="showFilesModal()">📁 Files</button>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>🤖 Chat Your Docs</h1>
+                <p>AI-powered document chat</p>
             </div>
-            <div class="header-buttons right">
-                <button class="header-btn" onclick="showSystemStatusModal()">⚙️ System Status</button>
+            
+            <div class="sidebar-actions">
+                <button class="sidebar-btn active" onclick="startNewChat()">
+                    <span>💬</span>
+                    New Chat
+                </button>
+                <button class="sidebar-btn" onclick="showFilesModal()">
+                    <span>📁</span>
+                    Files
+                </button>
+                <button class="sidebar-btn" onclick="showSystemStatusModal()">
+                    <span>⚙️</span>
+                    System Status
+                </button>
+                <button class="sidebar-btn" onclick="showLogsModal()">
+                    <span>📋</span>
+                    Logs
+                </button>
             </div>
-            <h1>🤖 Chat Your Docs with AI</h1>
-            <p>Chat with your documents, let AI help you</p>
         </div>
-        <div class="chat-container">
-            <div class="messages" id="messages">
-                <div class="message ai">
-                    <div class="message-content">
-                        Hello! I'm your AI assistant. You can ask questions about your uploaded documents.
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-title">Chat with AI</div>
+                    <div class="chat-subtitle">Ask questions about your documents</div>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="toggleSidebar()">☰</button>
+                </div>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">🤖</div>
+                    <div class="welcome-title">Welcome to Chat Your Docs</div>
+                    <div class="welcome-subtitle">
+                        Upload your documents and start chatting with AI. Get instant answers from your PDF and Markdown files.
+                    </div>
+                    <div class="welcome-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">📄</div>
+                            <div class="feature-title">Document Upload</div>
+                            <div class="feature-desc">Upload PDF and Markdown files</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🧠</div>
+                            <div class="feature-title">AI Chat</div>
+                            <div class="feature-desc">Ask questions about your documents</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-title">Fast Processing</div>
+                            <div class="feature-desc">Quick vectorization and search</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="input-container">
-                <div class="input-group">
-                    <input type="text" id="questionInput" placeholder="Ask a question about your documents...">
-                    <button id="sendButton" onclick="sendQuestion()">Send</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- System Status Modal -->
-    <div id="systemStatusModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>⚙️ System Status</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button class="header-btn" onclick="showLogsModal()" style="font-size: 11px; padding: 4px 8px;">📋 View Logs</button>
-                    <span class="close" onclick="closeModal('systemStatusModal')">&times;</span>
-                </div>
-            </div>
-            <div class="modal-body" id="systemStatusContent">
-                <div class="loading">
-                    <div class="spinner"></div> Loading system status...
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" placeholder="Ask a question about your documents..." onkeypress="handleKeyPress(event)">
+                        <button id="sendButton" onclick="sendMessage()">
+                            <span>Send</span>
+                            <span>➤</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -320,12 +813,39 @@
     <div id="filesModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>📁 Files</h2>
-                <span class="close" onclick="closeModal('filesModal')">&times;</span>
+                <div class="modal-title">📁 Files</div>
+                <button class="modal-close" onclick="closeModal('filesModal')">&times;</button>
             </div>
-            <div class="modal-body" id="filesContent">
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Upload Documents</div>
+                    <div class="upload-subtext">Drag & drop files here or click to browse</div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose Files</button>
+                    <input type="file" id="fileInput" class="upload-input" accept=".pdf,.md" multiple>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px;">Supported formats: PDF, Markdown</div>
+                </div>
+                <div id="fileListContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading files...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Modal -->
+    <div id="systemStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ System Status</div>
+                <button class="modal-close" onclick="closeModal('systemStatusModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="systemStatusContent">
                 <div class="loading">
-                    <div class="spinner"></div> Loading files...
+                    <div class="spinner"></div>
+                    Loading system status...
                 </div>
             </div>
         </div>
@@ -335,442 +855,340 @@
     <div id="logsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>📋 System Logs</h2>
-                <span class="close" onclick="closeModal('logsModal')">&times;</span>
+                <div class="modal-title">📋 System Logs</div>
+                <button class="modal-close" onclick="closeModal('logsModal')">&times;</button>
             </div>
             <div class="modal-body" id="logsContent">
                 <div class="loading">
-                    <div class="spinner"></div> Loading logs...
+                    <div class="spinner"></div>
+                    Loading logs...
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:8080/api';
-        let isLoading = false;
+        const API_BASE = 'http://localhost:8080/';
+        let isWaitingForResponse = false;
 
-        document.getElementById('questionInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !isLoading) sendQuestion();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+            loadSystemStatus();
         });
 
-        async function sendQuestion() {
-            const input = document.getElementById('questionInput');
-            const button = document.getElementById('sendButton');
-            const question = input.value.trim();
+        // Chat Functions
+        function startNewChat() {
+            document.getElementById('chatContainer').innerHTML = '';
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            document.getElementById('messageInput').focus();
+        }
 
-            if (!question || isLoading) return;
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
 
-            isLoading = true;
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || isWaitingForResponse) return;
+
+            // Hide welcome screen
+            document.getElementById('welcomeScreen').style.display = 'none';
+
+            // Add user message
+            addMessage(message, 'user');
             input.value = '';
-            button.disabled = true;
-            button.textContent = 'Sending...';
-
-            addMessage(question, 'user');
-            const loadingId = addLoadingMessage();
-
-            try {
-                const response = await fetch(`${API_BASE}/question/ask`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question, maxResults: 5 })
-                });
-
-                const data = await response.json();
-                removeMessage(loadingId);
-
-                if (data.success) {
-                    addMessage(data.answer, 'ai');
-                } else {
-                    addMessage(data.answer || 'Sorry, an error occurred.', 'ai');
-                }
-            } catch (error) {
-                removeMessage(loadingId);
-                addMessage('Connection error. Please try again.', 'ai');
-            } finally {
-                isLoading = false;
-                button.disabled = false;
-                button.textContent = 'Send';
-                input.focus();
-            }
-        }
-
-        function addMessage(content, type) {
-            const messagesContainer = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            messageContent.textContent = content;
-
-            messageDiv.appendChild(messageContent);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            return messageDiv;
-        }
-
-        function addLoadingMessage() {
-            const messagesContainer = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message ai';
-            messageDiv.id = 'loading-message';
-
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-
-            const loading = document.createElement('div');
-            loading.className = 'loading';
-            loading.innerHTML = '<div class="spinner"></div> Working...';
-
-            messageContent.appendChild(loading);
-            messageDiv.appendChild(messageContent);
-            messagesContainer.appendChild(messageDiv);
-
-            return 'loading-message';
-        }
-
-        function removeMessage(messageId) {
-            const message = document.getElementById(messageId);
-            if (message) message.remove();
-        }
-
-        // Modal Functions
-        function showSystemStatusModal() {
-            const modal = document.getElementById('systemStatusModal');
-            modal.style.display = 'block';
-            loadSystemStatus();
-        }
-
-        function showFilesModal() {
-            const modal = document.getElementById('filesModal');
-            modal.style.display = 'block';
-            loadFiles();
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const systemModal = document.getElementById('systemStatusModal');
-            const filesModal = document.getElementById('filesModal');
-            const logsModal = document.getElementById('logsModal');
-            if (event.target === systemModal) {
-                systemModal.style.display = 'none';
-            }
-            if (event.target === filesModal) {
-                filesModal.style.display = 'none';
-            }
-            if (event.target === logsModal) {
-                logsModal.style.display = 'none';
-            }
-        }
-
-        async function loadSystemStatus() {
-            const content = document.getElementById('systemStatusContent');
             
-            try {
-                const response = await fetch('http://localhost:8080/');
-                const data = await response.json();
+            // Show typing indicator
+            const typingId = addTypingIndicator();
+            
+            // Send to API
+            isWaitingForResponse = true;
+            document.getElementById('sendButton').disabled = true;
+
+            fetch(`${API_BASE}api/question/ask`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: message }),
+                signal: AbortSignal.timeout(360000) 
+            })
+            .then(response => response.json())
+            .then(data => {
+                removeTypingIndicator(typingId);
                 
-                content.innerHTML = `
-                    <div class="status-item">
-                        <span class="status-label">Overall Status</span>
-                        <span class="status-value status-${data.status}">${data.status.toUpperCase()}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Uptime</span>
-                        <span class="status-value">${data.uptime}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Last Update</span>
-                        <span class="status-value">${new Date(data.timestamp).toLocaleString('en-US')}</span>
-                    </div>
-                    <hr style="margin: 20px 0;">
-                    <h3 style="margin-bottom: 15px; color: #333;">Service Status</h3>
-                    <div class="status-item">
-                        <span class="status-label">Redis</span>
-                        <span class="status-value status-${data.services.redis.isConnected ? 'backend-connected' : 'backend-disconnected'}">${data.services.redis.status}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Ollama</span>
-                        <span class="status-value status-${data.services.ollama.isConnected ? 'connected' : 'disconnected'}">${data.services.ollama.status} [${data.services.ollama.chatModel || 'unknown'}]</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Python Worker</span>
-                        <span class="status-value status-${data.services.pythonWorker.isActive ? 'active' : 'inactive'}">${data.services.pythonWorker.status}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Frontend</span>
-                        <span class="status-value status-${data.services.frontend.isRunning ? 'running' : 'error'}">${data.services.frontend.status}</span>
-                    </div>
-                    ${data.services.ollama.message ? `<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404; font-size: 14px;">⚠️ ${data.services.ollama.message}</div>` : ''}
-                `;
-            } catch (error) {
-                content.innerHTML = `
-                    <div style="text-align: center; color: #721c24; padding: 20px;">
-                        ❌ System status could not be loaded: ${error.message}
-                    </div>
-                `;
-            }
+                if (data.success) {
+                    addMessage(data.answer, 'assistant');
+                } else {
+                    addMessage(data.error || 'Sorry, I couldn\'t process your question.', 'assistant');
+                }
+            })
+            .catch(error => {
+                removeTypingIndicator(typingId);
+                if (error.name === 'TimeoutError') {
+                    addMessage('Request timed out. The AI is taking longer than expected. Please try again.', 'assistant');
+                } else if (error.name === 'AbortError') {
+                    addMessage('Request was cancelled. Please try again.', 'assistant');
+                } else {
+                    addMessage('Connection error. Please try again.', 'assistant');
+                }
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                isWaitingForResponse = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            });
         }
 
-        async function loadFiles() {
-            const content = document.getElementById('filesContent');
+        function addMessage(content, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
             
-            // Add upload area
-            content.innerHTML = `
-                <div class="upload-area" id="uploadArea">
-                    <div style="font-size: 24px; margin-bottom: 10px;">📁</div>
-                    <div style="font-weight: 600; margin-bottom: 5px;">Upload Documents</div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 15px;">Drag & drop files here or click to browse</div>
-                    <input type="file" id="fileInput" class="upload-input" accept=".pdf,.md" multiple>
-                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Choose Files</button>
-                    <div style="font-size: 11px; color: #666; margin-top: 10px;">Supported formats: PDF, Markdown</div>
-                </div>
-                <div id="fileListContent">
-                    <div class="loading">
-                        <div class="spinner"></div> Loading files...
-                    </div>
+            const avatar = sender === 'user' ? 'U' : 'AI';
+            const time = new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    ${content}
+                    <div class="message-time">${time}</div>
                 </div>
             `;
             
-            // Setup file upload
-            setupFileUpload();
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant typing-indicator';
+            typingDiv.id = 'typing-' + Date.now();
             
-            try {
-                const response = await fetch(`${API_BASE}/files`);
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error(data.errorMessage || 'Files could not be loaded');
-                }
-                
-                const fileListContent = document.getElementById('fileListContent');
-                
-                if (data.files.length === 0) {
-                    fileListContent.innerHTML = `
-                        <div style="text-align: center; color: #666; padding: 20px;">
-                            📁 No files uploaded yet
-                        </div>
-                    `;
-                    return;
-                }
-                
-                fileListContent.innerHTML = `
-                    <div style="margin-bottom: 15px; color: #333;">
-                        <strong>Total Files:</strong> ${data.totalCount}
-                    </div>
-                    <div class="file-list">
-                        ${data.files.map(file => {
-                            const status = file.status === 'Error' ? 'Error' : 
-                                         file.status === 'Processed' ? 'Processed' : 'Queued';
-                            const statusClass = file.status === 'Error' ? 'error' : 
-                                              file.status === 'Processed' ? 'processed' : 'queued';
-                            const chunks = file.chunkCount > 0 ? ` • ${file.chunkCount} chunks` : '';
-                            
-                            return `
-                                <div class="file-item">
-                                    <div class="file-info">
-                                        <div class="file-name">${file.fileName}</div>
-                                        <div class="file-size">${formatFileSize(file.fileSize)}${chunks} • ${new Date(file.processedAt).toLocaleString('en-US')}</div>
-                                    </div>
-                                    <div class="file-status status-${statusClass}">
-                                        ${status}
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                const fileListContent = document.getElementById('fileListContent');
-                fileListContent.innerHTML = `
-                    <div style="text-align: center; color: #721c24; padding: 20px;">
-                        ❌ Files could not be loaded: ${error.message}
-                    </div>
-                `;
+            typingDiv.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="spinner"></div>
+                    Working...
+                </div>
+            `;
+            
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return typingDiv.id;
+        }
+
+        function removeTypingIndicator(id) {
+            const typingElement = document.getElementById(id);
+            if (typingElement) {
+                typingElement.remove();
             }
         }
 
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-
-        function showLogsModal() {
-            const modal = document.getElementById('logsModal');
-            modal.style.display = 'block';
-            loadLogs();
-        }
-
-        async function loadLogs() {
-            const content = document.getElementById('logsContent');
-            
-            try {
-                const response = await fetch(`${API_BASE}/logs?count=50`);
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error('Logs could not be loaded');
-                }
-                
-                if (data.logs.length === 0) {
-                    content.innerHTML = `
-                        <div style="text-align: center; color: #666; padding: 20px;">
-                            📋 No logs available
-                        </div>
-                    `;
-                    return;
-                }
-                
-                content.innerHTML = `
-                    <div style="margin-bottom: 15px; color: #333;">
-                        <strong>Total Logs:</strong> ${data.totalCount || 0} | 
-                        <strong>Retrieved:</strong> ${data.logs.length} | 
-                        <strong>Last Update:</strong> ${data.retrievedAt ? new Date(data.retrievedAt).toLocaleString('en-US') : 'N/A'}
-                    </div>
-                    <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
-                        ${data.logs.map(log => {
-                            const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString('en-US') : 'N/A';
-                            const level = log.level || 'UNKNOWN';
-                            const event = log.event || 'UNKNOWN';
-                            const message = log.message || 'No message';
-                            const details = log.details || '';
-                            const fileName = log.fileName || '';
-                            
-                            return `
-                                <div class="log-item">
-                                    <div>
-                                        <span class="log-timestamp">${timestamp}</span>
-                                        <span class="log-level log-level-${level}">${level}</span>
-                                        <span class="log-event">${event}</span>
-                                    </div>
-                                    <div class="log-message">${message}</div>
-                                    ${details ? `<div style="color: #666; font-size: 11px; margin-top: 2px;">${details}</div>` : ''}
-                                    ${fileName ? `<div style="color: #667eea; font-size: 11px; margin-top: 2px;">📁 ${fileName}</div>` : ''}
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                content.innerHTML = `
-                    <div style="text-align: center; color: #721c24; padding: 20px;">
-                        ❌ Logs could not be loaded: ${error.message}
-                    </div>
-                `;
-            }
-        }
-
+        // File Upload Functions
         function setupFileUpload() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
-            
-            // Drag and drop events
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                handleFileUpload(files);
-            });
-            
-            // File input change
-            fileInput.addEventListener('change', (e) => {
-                handleFileUpload(e.target.files);
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'application/pdf' || file.name.endsWith('.md')) {
+                    uploadFile(file);
+                } else {
+                    alert('Please select only PDF or Markdown files.');
+                }
             });
         }
 
-        async function handleFileUpload(files) {
-            if (!files || files.length === 0) return;
-            
-            const uploadArea = document.getElementById('uploadArea');
-            const originalContent = uploadArea.innerHTML;
-            
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                
-                // Validate file type
-                if (!file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.md')) {
-                    alert(`File ${file.name} is not supported. Please upload PDF or Markdown files.`);
-                    continue;
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`${API_BASE}api/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadFiles();
+                    addMessage(`File "${file.name}" uploaded successfully!`, 'assistant');
+                } else {
+                    addMessage(`Failed to upload "${file.name}": ${data.error}`, 'assistant');
                 }
-                
-                // Show upload progress
-                uploadArea.innerHTML = `
-                    <div style="font-size: 24px; margin-bottom: 10px;">📤</div>
-                    <div style="font-weight: 600; margin-bottom: 5px;">Uploading...</div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
-                    <div class="loading">
-                        <div class="spinner"></div> Uploading file...
+            })
+            .catch(error => {
+                addMessage(`Error uploading "${file.name}": ${error.message}`, 'assistant');
+            });
+        }
+
+        // Modal Functions
+        function showFilesModal() {
+            document.getElementById('filesModal').classList.add('show');
+            loadFiles();
+        }
+
+        function showSystemStatusModal() {
+            document.getElementById('systemStatusModal').classList.add('show');
+            loadSystemStatus();
+        }
+
+        function showLogsModal() {
+            document.getElementById('logsModal').classList.add('show');
+            loadLogs();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Data Loading Functions
+        function loadFiles() {
+            const content = document.getElementById('fileListContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading files...</div>';
+
+            fetch(`${API_BASE}api/files`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.files && data.files.length > 0) {
+                    content.innerHTML = `
+                        <div class="file-list">
+                            ${data.files.map(file => `
+                                <div class="file-item">
+                                    <div class="file-icon">${file.fileName.endsWith('.pdf') ? '📄' : '📝'}</div>
+                                    <div class="file-info">
+                                        <div class="file-name">${file.fileName}</div>
+                                        <div class="file-meta">${file.fileSize} • ${file.processedAt || 'Processing...'}</div>
+                                    </div>
+                                    <div class="file-status ${file.status}">${file.status}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">No files uploaded yet.</div>';
+                }
+            })
+            .catch(error => {
+                content.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Error loading files.</div>';
+            });
+        }
+
+        function loadSystemStatus() {
+            const content = document.getElementById('systemStatusContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading system status...</div>';
+
+            fetch(`${API_BASE}`)
+            .then(response => response.json())
+            .then(data => {
+                content.innerHTML = `
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Redis</div>
+                            <div class="status-value status-${data.services.redis.isConnected ? 'connected' : 'disconnected'}">${data.services.redis.status}</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Ollama</div>
+                            <div class="status-value status-${data.services.ollama.isConnected ? 'connected' : 'disconnected'}">${data.services.ollama.status} [${data.services.ollama.chatModel || 'unknown'}]</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Python Worker</div>
+                            <div class="status-value status-${data.services.pythonWorker.isActive ? 'active' : 'inactive'}">${data.services.pythonWorker.status}</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Frontend</div>
+                            <div class="status-value status-${data.services.frontend.isRunning ? 'connected' : 'disconnected'}">${data.services.frontend.status}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">System Uptime</div>
+                        <div style="font-size: 14px; color: var(--text-primary);">${data.uptime}</div>
                     </div>
                 `;
-                
-                try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const response = await fetch(`${API_BASE}/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        uploadArea.innerHTML = `
-                            <div style="font-size: 24px; margin-bottom: 10px;">✅</div>
-                            <div style="font-weight: 600; margin-bottom: 5px;">Upload Successful!</div>
-                            <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
-                            <div style="font-size: 11px; color: #28a745;">File queued for processing</div>
-                        `;
-                        
-                        // Reload file list after a short delay
-                        setTimeout(() => {
-                            loadFiles();
-                        }, 2000);
-                    } else {
-                        throw new Error(result.message || 'Upload failed');
-                    }
-                } catch (error) {
-                    uploadArea.innerHTML = `
-                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
-                        <div style="font-weight: 600; margin-bottom: 5px;">Upload Failed</div>
-                        <div style="font-size: 12px; color: #666; margin-bottom: 15px;">${file.name}</div>
-                        <div style="font-size: 11px; color: #dc3545;">${error.message}</div>
-                    `;
-                    
-                    // Restore original content after 3 seconds
-                    setTimeout(() => {
-                        uploadArea.innerHTML = originalContent;
-                        setupFileUpload();
-                    }, 3000);
-                }
-                
-                // Wait between uploads
-                if (i < files.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
+            })
+            .catch(error => {
+                content.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Error loading system status.</div>';
+            });
         }
 
-        window.addEventListener('load', function() {
-            document.getElementById('questionInput').focus();
+        function loadLogs() {
+            const content = document.getElementById('logsContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading logs...</div>';
+
+            fetch(`${API_BASE}api/logs`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.logs && data.logs.length > 0) {
+                    content.innerHTML = `
+                        <div class="log-list">
+                            ${data.logs.map(log => `
+                                <div class="log-item">
+                                    <div class="log-header">
+                                        <div class="log-level ${log.level}">${log.level}</div>
+                                        <div class="log-time">${log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown'}</div>
+                                    </div>
+                                    <div class="log-message">${log.message || 'No message'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">No logs available.</div>';
+                }
+            })
+            .catch(error => {
+                content.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Error loading logs.</div>';
+            });
+        }
+
+        // Sidebar Functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
         });
     </script>
 </body>

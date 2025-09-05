@@ -115,7 +115,7 @@ namespace backend_api.Controllers
             {
                 var isConnected = await _ollamaService.IsConnectedAsync();
                 var currentChatModel = _ollamaService.GetCurrentModelName();
-                var embeddingModelAvailable = await _ollamaService.IsModelAvailableAsync("snowflake-arctic-embed2");
+                var embeddingModelAvailable = await _ollamaService.IsModelAvailableAsync("nomic-embed-text");
                 var chatModelAvailable = await _ollamaService.IsModelAvailableAsync(currentChatModel);
                 
                 if (isConnected && embeddingModelAvailable && chatModelAvailable)
@@ -124,7 +124,7 @@ namespace backend_api.Controllers
                     {
                         status = "connected",
                         isConnected = true,
-                        embeddingModel = "snowflake-arctic-embed2",
+                        embeddingModel = "nomic-embed-text",
                         chatModel = currentChatModel,
                         modelsAvailable = true
                     };
@@ -135,7 +135,7 @@ namespace backend_api.Controllers
                     {
                         status = "degraded",
                         isConnected = isConnected,
-                        embeddingModel = embeddingModelAvailable ? "snowflake-arctic-embed2" : "not available",
+                        embeddingModel = embeddingModelAvailable ? "nomic-embed-text" : "not available",
                         chatModel = chatModelAvailable ? currentChatModel : "not available",
                         modelsAvailable = embeddingModelAvailable && chatModelAvailable,
                         message = "Ollama bağlantısı var ama modeller eksik"

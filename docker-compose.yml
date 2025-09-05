@@ -24,7 +24,7 @@ services:
       - STORAGE_TYPE=FileStorage
       - REDIS_CONNECTION_STRING=redis:6379
       - OLLAMA_HOST=http://ollama:11434
-      - EMBEDDING_MODEL=snowflake-arctic-embed2
+      - EMBEDDING_MODEL=nomic-embed-text
       - CHAT_MODEL=llama3.1:8b
 
 
@@ -45,7 +45,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - OLLAMA_HOST=http://ollama:11434
-      - EMBEDDING_MODEL=snowflake-arctic-embed2
+      - EMBEDDING_MODEL=nomic-embed-text
       - CHUNK_SIZE=1000
       - CHUNK_OVERLAP=200
 

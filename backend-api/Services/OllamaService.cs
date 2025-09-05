@@ -151,14 +151,16 @@ namespace backend_api.Services
 
         private string BuildPrompt(string context, string question)
         {
-            return $@"Aşağıdaki bağlamı kullanarak soruyu yanıtlayın. Eğer bağlamda yanıt bulamıyorsanız, 'Bağlamda bu bilgi bulunmuyor' yazın.
+            return $@"Aşağıdaki bağlamı dikkate alarak soruyu yanıtla.
+Eğer cevap bağlamda yoksa ""Bu soruya elimdeki dosyalrda yanıt bulunmamaktadır."" diye yanıtla.
 
 Bağlam:
 {context}
 
-Soru: {question}
+Soru:
+{question}
 
-Yanıt:";
+Cevap:";
         }
 
         private float[] GenerateMockEmbedding(string text)

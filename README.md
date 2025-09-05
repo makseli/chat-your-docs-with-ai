@@ -294,7 +294,8 @@ docker exec -it ollama_llm ollama list
 
 # Download model
 docker exec -it ollama_llm ollama pull llama3.1:8b
-docker exec -it ollama_llm ollama pull snowflake-arctic-embed2
+docker exec -it ollama_llm ollama pull nomic-embed-text
+#docker exec -it ollama_llm ollama pull snowflake-arctic-embed2 #for build vector db
 ```
 
 ##### 2. Redis Connection Error
